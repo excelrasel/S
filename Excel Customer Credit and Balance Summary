@@ -1,0 +1,22 @@
+select DISTINCT 
+      p.name AS `Customer`,
+      p.customer_name AS `Customer Name`,
+      gle.debit - gle.credit AS 'Opening Balance',
+      SUM(si.grand_total) as 'Invoice Amount',
+      SUM(si.paid_amount) AS `Paid Amount`,
+			ccl.credit_limit AS `Credit Limit`,
+			ccl.credit_limit - (gle.debit - gle.credit) AS `Remaining Credit`,
+			gle.account_currency
+			
+			from 
+			     (SELECT @b := 0.0) AS test
+			      CROSS JOIN `tabGL Entry` as gle
+			      LEFT JOIN `tabCustomer Credit Limit` ccl ON gle.party = ccl.parent
+			      LEFT JOIN `tabSales Invoice` as si ON gle.voucher_no = si.name
+			      LEFT JOIN `tabCustomer` p on gle.party = p.name
+            LEFT JOIN `tabPayment Entry` as pe on gle.party =  pe.name
+            LEFT JOIN `tabJournal Entry` AS je on gle.party = je.parent
+            
+			where
+			gle.docstatus < 2
+			GROUP BY p.name
